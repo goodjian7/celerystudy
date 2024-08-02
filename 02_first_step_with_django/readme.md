@@ -185,3 +185,100 @@ CACHES = {
 일정주기로 수행되어야 하는 task를 설정.  
 admin 페이지에서 task 설정가능
 
+## django-celery-beat
+django-celery-beat설치  
+admin 페이지와 연동하여 beat task관리 가능
+```
+pip install djang-celery-beat
+```
+
+settings.py수정
+```
+INSTALLED_APPS = [
+    'django_celery_beat',
+    ...
+]
+```
+```
+from kombu import Exchange, Queue
+
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+CELERY_RESULT_BACKEND = 'rpc://'
+# celery큐가 default 큐임
+CELERY_TASK_QUEUES = (
+    Queue('celery', Exchange('default'), routing_key='celery'),
+    Queue('high', Exchange('default'), routing_key='high'),
+)
+# task함수별 기본 라우팅 될 큐 설정
+# CELERY_TASK_ROUTES = {
+#     'tasks.high_priority_tasks.high_priority_task': {'queue': 'high'},
+#     'tasks.default_tasks.default_task': {'queue': 'celery'},
+# }
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Asia/Seoul'
+CELERY_ENABLE_UTC = True
+
+# Celery Beat 설정
+# admin에서도 설정 가능
+CELERY_BEAT_SCHEDULE = {
+    'test_task': {
+        'task': 'myapp.tasks.test_task',
+        'schedule': crontab(minute='*/1'),  # 매 1분마다 실행
+        'args': (1, 2),
+    },
+}
+# Celery Beat 스케줄러 설정
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+```
+
+docker로 redis나 rabbitmq등이 동작중이라고 가정  
+celery beat 프로세스와 celery worker 프로세스 시작
+```
+# Celery Beat 실행
+celery -A config beat
+--loglevel=info \
+--pidfile=/var/run/celery/beatpid.pid \
+--logfile=/var/log/celery/beatlog.log \
+--detach
+```
+
+```
+# Celery Beat 상태확인 
+ps -p $(cat /path/to/celerybeat.pid)
+```
+```
+# Celery Beat 종료
+kill $(cat /path/to/celerybeat.pid)
+```
+
+```
+# Celery Worker 실행
+celery -A config worker \
+--loglevel=info \
+--pidfile=/var/run/celery/worker_pid.pid \
+--logfile=/var/log/celery/worker_log.log \
+--detach
+```
+```
+# Celeery Worker 상태 확인 
+ps -p $(cat /path/to/celeryworker.pid)
+```
+```
+# Celery Worker 종료
+kill $(cat /path/to/celerybeat.pid)
+```
+
+## pid파일이 없는경우
+```
+$ ps aux | grep 'celery'
+```
+출력 결과
+```
+park      174652  0.3  0.0  61932 52440 ?        S    15:18   0:04 /home/park/python_envs/p38/bin/python /home/park/python_envs/p38/bin/celery -A config beat -l INFO --detach
+```
+프로세스 종료
+```
+kill 174652
+```

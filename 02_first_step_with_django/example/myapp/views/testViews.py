@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 class TestView(View):
     def get(self, request, *args, **kwargs):
-        aresult = test_task.delay(1,2)
+        aresult = test_task.delay(1,2)        
         context={}
         context['task_id'] = aresult.id
         print(aresult.id)                

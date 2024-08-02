@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -32,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_celery_beat',
     'myapp.apps.MyappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -129,6 +131,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from kombu import Exchange, Queue
 
 CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+# 작업 결과의 유효 기간 (예: 24시간 후에 만료)
+# CELERY_TASK_RESULT_EXPIRES = 3600 * 24  # 24시간
 CELERY_RESULT_BACKEND = 'rpc://'
 # celery큐가 default 큐임
 CELERY_TASK_QUEUES = (
@@ -145,5 +149,17 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = True
+
+# Celery Beat 설정
+# admin에서도 설정 가능
+CELERY_BEAT_SCHEDULE = {
+    'test_task': {
+        'task': 'myapp.tasks.test_task',
+        'schedule': crontab(minute='*/1'),  # 매 1분마다 실행
+        'args': (1, 2),
+    },
+}
+# Celery Beat 스케줄러 설정 (django-celery-beat를 사용하면)
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 print(f'DEBUG : {DEBUG} on base')
