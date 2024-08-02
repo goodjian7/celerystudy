@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>task_id : <p>{{task_id}}</p></div>
+    <a href="{% url 'myapp:task_result' task_id %}">go to result</a>
+</body>
+</html>

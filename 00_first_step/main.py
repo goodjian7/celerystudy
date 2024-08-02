@@ -1,10 +1,12 @@
 from .tasks import add
 
 # aresult : Asyncresult 비동기작업의 상태를 조회하거나 결과조회
-aresult = add.delay(4,4)
+aresult= add.delay(4,4)
 
 ## task가 완료되었는지 확인
 #aresult.ready() 
+
+## result backend에서 result가 release되도록 get내지 forget을 수행해야함.
 
 ## 완료된 task의 반환 (1초이내에 완료되면 반환, 완료안되면 TimeoutError throw )
 # aresult.get(timeout=1)
